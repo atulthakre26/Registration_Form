@@ -101,6 +101,27 @@
     .login-link a:hover {
       text-decoration: underline;
     }
+
+    .password-wrapper {
+      position: relative;
+      margin-bottom: 0.2rem;
+    }
+
+    .password-wrapper input {
+      width: 100%;
+      padding-right: 2.5rem;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 1rem;
+      top: 40%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: #fff;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
@@ -112,8 +133,17 @@
       <input type="text" id="fullname" placeholder="Full Name" required />
       <input type="email" id="email" placeholder="Email" required />
       <input type="text" id="username" placeholder="Username" required />
-      <input type="password" id="password" placeholder="Password" required />
-      <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
+
+      <div class="password-wrapper">
+        <input type="password" id="password" placeholder="Password" required />
+        <span class="toggle-password" onclick="togglePassword('password', this)">👁️</span>
+      </div>
+
+      <div class="password-wrapper">
+        <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
+        <span class="toggle-password" onclick="togglePassword('confirmPassword', this)">👁️</span>
+      </div>
+
       <button type="submit">Register</button>
     </form>
     <div class="login-link">
@@ -123,17 +153,58 @@
 
   <script>
     const form = document.getElementById('registerForm');
-    form.addEventListener('submit', function (e) {
+
+    form.addEventListener('submit', async function (e) {
       e.preventDefault();
+
+      const fullName = document.getElementById('fullname').value;
+      const email = document.getElementById('email').value;
+      const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
       const confirmPassword = document.getElementById('confirmPassword').value;
+
       if (password !== confirmPassword) {
         alert("Passwords do not match!");
-      } else {
-        alert("Registration successful!");
-        // You can add form submission logic here
+        return;
+      }
+
+      const data = {
+        fullName: fullName,
+        email: email,
+        username: username,
+        password: password
+      };
+
+      try {
+        const response = await fetch('http://localhost:8080/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          alert("Registration successful!");
+          form.reset();
+          window.location.href = "login.html";
+        } else {
+          const errorData = await response.json();
+          alert("Registration failed: " + (errorData.message || "Unknown error"));
+        }
+
+      } catch (error) {
+        console.error("Error during registration:", error);
+        alert("Something went wrong. Please try again later.");
       }
     });
+
+    function togglePassword(fieldId, toggleIcon) {
+      const passwordField = document.getElementById(fieldId);
+      const isPassword = passwordField.type === 'password';
+      passwordField.type = isPassword ? 'text' : 'password';
+      toggleIcon.textContent = isPassword ? '🙈' : '👁️';
+    }
   </script>
 </body>
 </html>
